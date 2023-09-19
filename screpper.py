@@ -1,12 +1,12 @@
-import requests
-from bs4 import BeautifulSoup
 import re
 import time
+
+from bs4 import BeautifulSoup
 from validate_email import validate_email
 from urllib.parse import urlsplit
 from selenium import webdriver
 
-
+sellers_links = []
 options = webdriver.ChromeOptions()
 options.add_argument("--headless")
 browser = webdriver.Chrome(options=options)
@@ -22,7 +22,7 @@ pattern_web = re.compile(
     re.IGNORECASE,
 )  # Path and query (optional)
 
-sellers_links = []
+
 for i in range(1, 2):
     browser.get("https://www.autobazar.eu/predajcovia-aut/?page=" + str(i))
     time.sleep(5)
@@ -33,17 +33,25 @@ for i in range(1, 2):
     for seller in sellers:
         sellers_links.append(seller.find("a")["href"])
 
-print(sellers_links)
-
+# Testing
+# print(sellers_links)
+# sellers_links.append("https://aaaautosokolov.autobazar.eu/")
 for seller_link in sellers_links:
-    page = requests.get(seller_link)
-    soup = BeautifulSoup(page.text, "html.parser")
-    name = soup.find_all("h1")[0]
+    page = browser.get(seller_link)
+    time.sleep(2)
+    html = browser.page_source
+    soup = BeautifulSoup(html, "html.parser")
+
+    name = soup.find("h1")
     address = soup.find("address")
 
     contacts = soup.find_all(
         "a", {"class": "group flex items-center hover:cursor-pointer"}
     )
+
+    if contacts is []:
+        # TODO: find another way to get contacts
+        contacts = "aaa"
 
     phones = []
     emails = []
@@ -66,13 +74,19 @@ for seller_link in sellers_links:
             "class": "flex items-center text-[14px] font-normal leading-[1.40] text-[rgba(235,235,245,.6)] underline"
         },
     )
-    number_of_cars = (
-        number_of_cars.text.replace(" ", "").replace("\n", "").replace("Inzerátov:", "")
-    )
+
+    if number_of_cars is not None:
+        cars = number_of_cars = (
+            number_of_cars.text.replace(" ", "")
+            .replace("\n", "")
+            .replace("Inzerátov:", "")
+        )
+    else:
+        cars = 0
 
     print(name.text)
     print(address.text)
     print(phones)
     print(emails)
     print(websites)
-    print(number_of_cars)
+    print(cars)
