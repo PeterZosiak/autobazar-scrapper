@@ -23,15 +23,30 @@ pattern_web = re.compile(
     r"(?:/?|[/?]\S+)$",
     re.IGNORECASE,
 )
+browser.get("https://www.autobazar.eu/predajcovia-aut/")
+time.sleep(2)
+html = browser.page_source
+root_soup = BeautifulSoup(html, features="html.parser")
 
+last_page_number = root_soup.find_all(
+    "a",
+    {
+        "class": "my-0 mr-0 ml-2 inline-block h-[40px] w-auto min-w-[40px] rounded-lg bg-none p-0 text-center text-[14px] font-semibold leading-10 text-white transition-all duration-[0.2s] ease-in-out disabled:cursor-not-allowed disabled:bg-none disabled:text-white/60 disabled:hover:bg-inherit cursor-pointer hover:bg-[#0a84ff] hover:text-white"
+    },
+)[1].text
 
-for i in range(1, 2):
-    browser.get("https://www.autobazar.eu/predajcovia-aut/?page=" + str(i))
-    time.sleep(5)
+print("Last page number: " + last_page_number)
+
+sellers_page_url = "https://www.autobazar.eu/predajcovia-aut/?page="
+for i in range(1, int(last_page_number)):
+    browser.get(sellers_page_url + str(i))
+    print("Page: " + sellers_page_url + str(i))
+
+    time.sleep(2)
     html = browser.page_source
-    root_soup = BeautifulSoup(html, features="html.parser")
+    page_soup = BeautifulSoup(html, features="html.parser")
 
-    sellers_heads = root_soup.find_all("h3")
+    sellers_heads = page_soup.find_all("h3")
     for seller in sellers_heads:
         sellers_links.append(seller.find("a")["href"])
 
@@ -41,12 +56,15 @@ sellers = []
 # sellers_links.append("https://aaaautosokolov.autobazar.eu/")
 for seller_link in sellers_links:
     page = browser.get(seller_link)
-    time.sleep(2)
+    print("Seller: " + seller_link)
+    time.sleep(1)
     html = browser.page_source
     soup = BeautifulSoup(html, "html.parser")
 
-    name = soup.find("h1").text.strip().replace("\n", "")
-    address = soup.find("address").text.replace("\n", "")
+    name = soup.find("h1").text.strip().replace("\n", "") if soup.find("h1") else ""
+    address = (
+        soup.find("address").text.replace("\n", "") if soup.find("address") else ""
+    )
 
     contacts = soup.find_all(
         "a", {"class": "group flex items-center hover:cursor-pointer"}
@@ -95,6 +113,8 @@ for seller_link in sellers_links:
             number_of_cars.text.replace(" ", "")
             .replace("\n", "")
             .replace("Inzerátov:", "")
+            if number_of_cars
+            else ""
         )
     else:
         cars = 0
