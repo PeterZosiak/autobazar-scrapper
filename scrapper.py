@@ -23,6 +23,8 @@ pattern_web = re.compile(
     r"(?:/?|[/?]\S+)$",
     re.IGNORECASE,
 )
+
+
 browser.get("https://www.autobazar.eu/predajcovia-aut/")
 time.sleep(2)
 html = browser.page_source
@@ -53,11 +55,11 @@ for i in range(1, int(last_page_number)):
 
 sellers = []
 # Testing
-# sellers_links.append("https://aaaautosokolov.autobazar.eu/")
+# sellers_links.append("https://autopolaksro33333333.autobazar.eu")
 for seller_link in sellers_links:
     page = browser.get(seller_link)
     print("Seller: " + seller_link)
-    time.sleep(1)
+    time.sleep(2)
     html = browser.page_source
     soup = BeautifulSoup(html, "html.parser")
 
@@ -66,13 +68,16 @@ for seller_link in sellers_links:
         soup.find("address").text.replace("\n", "") if soup.find("address") else ""
     )
 
+    contacts = []
     contacts = soup.find_all(
         "a", {"class": "group flex items-center hover:cursor-pointer"}
     )
 
     if len(contacts) == 0:
         # TODO: find another way to get contacts
-        contacts = soup.find("ul", {"class": "p-contacts"}).find_all("a")
+        contact_list = soup.find("ul", {"class": "p-contacts"})
+        if contact_list is not None:
+            contacts = contact_list.find_all("a")
 
     phones = []
     emails = []
@@ -104,9 +109,9 @@ for seller_link in sellers_links:
     )
 
     if number_of_cars is None:
-        number_of_cars = soup.find("ul", {"class": "p-stats"}).find(
-            "span", {"class": "p-link"}
-        )
+        stats_list = soup.find("ul", {"class": "p-stats"})
+        if stats_list is not None:
+            number_of_cars = stats_list.find("span", {"class": "p-link"})
 
     if number_of_cars is not None:
         cars = number_of_cars = (
