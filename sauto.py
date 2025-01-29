@@ -8,6 +8,7 @@ from validate_email import validate_email
 from urllib.parse import urlsplit
 from selenium import webdriver
 from selenium.webdriver.common.by import By
+import os
 
 
 sellers_links = []
@@ -32,6 +33,26 @@ browser.add_cookie({"name": "udid", "value": "Yf1VI-ppfX3vAoBT_8Ka8i-1us_IM7I6@1
 
 sellers = []
 
+# Check if sauto.csv exists, if not create it
+if not os.path.isfile("sauto.csv"):
+  csv_file = open("sauto.csv", "w", encoding="utf-8", newline="")
+  writer = csv.writer(csv_file)
+  writer.writerow(
+    [
+      "Link",
+      "Name",
+      "Address",
+      "Cars",
+      "Phone 1",
+      "Phone 2",
+      "Phone 3",
+      "Email 1",
+      "Email 2",
+      "Website 1",
+    ]
+  )
+  csv_file.close()
+
 # TODO: Change range based on offers count / 20 (20 per page) 
 for i in range(1, 72):
   print("Page: " + str(i))
@@ -48,6 +69,14 @@ for i in range(1, 72):
 
 for seller_link in sellers_links:
   print("Seller: " + seller_link)
+  # Check if current seller_link is already in sauto.csv
+  with open("sauto.csv", "r", encoding="utf-8") as csv_file:
+    reader = csv.reader(csv_file)
+    if any(seller_link in row for row in reader):
+      print("Seller already in sauto.csv")
+      continue
+
+
   page = browser.get(seller_link)
   time.sleep(1)
   html = browser.page_source
@@ -81,7 +110,7 @@ for seller_link in sellers_links:
     for website_link in website_links:
         websites.append(website_link["href"])
 
-    sellers.append({
+    seller_data = {
       "link": seller_link,
       "name": seller_name,
       "address": address,
@@ -92,44 +121,29 @@ for seller_link in sellers_links:
       "email 1": emails[0] if len(emails) > 0 else "",
       "email 2": emails[1] if len(emails) > 1 else "",
       "email 3": emails[2] if len(emails) > 2 else "",
-      "website 1": websites[0] if len(websites) > 0 else ""})
+      "website 1": websites[0] if len(websites) > 0 else ""
+    }
+
+    # Save seller on every iteration to sauto.csv
+    with open("sauto.csv", "a", encoding="utf-8", newline="") as csv_file:
+      writer = csv.writer(csv_file)
+      writer.writerow(
+          [
+              seller_data["link"],
+              seller_data["name"],
+              seller_data["address"],
+              seller_data["number of cars"],
+              seller_data["phone 1"],
+              seller_data["phone 2"],
+              seller_data["phone 3"],
+              seller_data["email 1"],
+              seller_data["email 2"],
+              seller_data["website 1"],
+          ]
+      )
+
+    sellers.append(seller_data)
   except:
     pass
 
-  
-
-
-print(sellers)
-csv_file = open("sauto.csv", "w", encoding="utf-8", newline="")
-writer = csv.writer(csv_file)
-writer.writerow(
-    [
-        "Link",
-        "Name",
-        "Address",
-        "Cars",
-        "Phone 1",
-        "Phone 2",
-        "Phone 3",
-        "Email 1",
-        "Email 2",
-        "Website 1",
-    ]
-)
-for seller in sellers:
-    writer.writerow(
-        [
-            seller["link"],
-            seller["name"],
-            seller["address"],
-            seller["number of cars"],
-            seller["phone 1"],
-            seller["phone 2"],
-            seller["phone 3"],
-            seller["email 1"],
-            seller["email 2"],
-            seller["website 1"],
-        ]
-    )
 browser.quit()
-csv_file.close()
