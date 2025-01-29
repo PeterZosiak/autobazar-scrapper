@@ -40,7 +40,7 @@ last_page_number = root_soup.find_all(
 print("Last page number: " + last_page_number)
 
 sellers_page_url = "https://www.autobazar.eu/predajcovia-aut/?page="
-for i in range(1, int(last_page_number)):
+for i in range(1, 2):
     browser.get(sellers_page_url + str(i))
     print("Page: " + sellers_page_url + str(i))
 
